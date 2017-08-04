@@ -28,13 +28,34 @@ public:
   //! в нативный формат Qt.
   static QImage toQImage( const cv::Mat& cvImage );
 
-  static std::vector<cv::Rect> detectTextBounds( const cv::Mat& cvImage );
+  //! Выделяет границы текстовых блоков изображения.
+  //! \param cvImage - обрабатываемое изображение.
+  //! \param bwThresholdLevel - значение цветового порога для преобразования изображения из градаций серого в черно-белое.
+  static std::vector<cv::Rect> detectTextBounds( const cv::Mat& cvImage, const double& bwThresholdLevel = 100. );
 
+
+  //! Выделяет границы документа (страницы документа).
+  //! \param cvImage - обрабатываемое изображение.
+  //! \param bwThresholdLevel - значение цветового порога для преобразования изображения из градаций серого в черно-белое.
+  static cv::Rect detectDocumentBounds( const cv::Mat& cvImage, const double& bwThresholdLevel = 25. );
+
+  //! Создает изображение с отрисованными границами документа.
+  static cv::Mat createDocumentBoundedImage( const cv::Mat& cvImage, const cv::Rect& documentBounds = cv::Rect() );
+
+  //! Создает изображение с отрисованными границами текстовых блоков.
   static cv::Mat createTextBoundedImage( const cv::Mat& image, const std::vector<cv::Rect>& textBounds = std::vector<cv::Rect>(0) );
+
+  //! Возвращает уровень порога цвета для преобразования изображения из градаций серого в черно-белое.
+  const double& bwThresholdLevel() const;
+
+  //! Устанавливает уровень порога цвета для преобразования изображения из градаций серого в черно-белое.
+  void setBwThresholdLevel(const double &level);
 
 private:
 
-  //double thresholdLevel_;
+  double bwThresholdLevel_;         //!< Значение уровня порога цвета для преобразования изображения из градаций серого в черно-белое.
+
+private:
 
   static const size_t BYTES_IN_RGB888_PIXEL = 3;
 
@@ -51,6 +72,19 @@ private:
   static bool isVerticalAccepted(const cv::Rect& rect, const cv::Mat& image);
 
 }; // class ImageProcessor
+
+
+inline
+const double &ImageProcessor::bwThresholdLevel() const
+{
+  return bwThresholdLevel_;
+}
+
+inline
+void ImageProcessor::setBwThresholdLevel(const double& level)
+{
+  bwThresholdLevel_ = level;
+}
 
 #endif // _DOCUMENT_RECOGNIZER_IMAGES_IMAGE_PROCESSOR_HPP
 

@@ -27,9 +27,10 @@ QImage ImageProcessor::toQImage(const cv::Mat &cvImage)
   return result;
 }
 
-std::vector<cv::Rect> ImageProcessor::detectTextBounds(const cv::Mat &cvImage) {
+//double ImageProcessor::defaultBwThresholdLevel = 100.;
 
-  const double thresholdLevel = 75.;
+std::vector<cv::Rect> ImageProcessor::detectTextBounds(const cv::Mat &cvImage, const double& bwThresholdLevel) {
+
   const double thresholdBinaryValue = 255.;
 
   int colsSize = 0.005 * cvImage.cols;
@@ -44,11 +45,12 @@ std::vector<cv::Rect> ImageProcessor::detectTextBounds(const cv::Mat &cvImage) {
   cv::Mat gradient;
   cv::Mat morphKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( colsSize, rowsSize ) );
   cv::morphologyEx( grayscaleImage, gradient, cv::MORPH_GRADIENT, morphKernel );
+  //blur( gradient, gradient, cv::Size(3, 3) );
   cv::imwrite("gradient.jpg", gradient);
 
   cv::Mat blackWhite;
-  cv::threshold( gradient, blackWhite, thresholdLevel, thresholdBinaryValue, cv::THRESH_BINARY);
-  cv::imwrite("blackwhite.jpg", gradient);
+  cv::threshold( gradient, blackWhite, bwThresholdLevel, thresholdBinaryValue, cv::THRESH_BINARY);
+  cv::imwrite("blackwhite.jpg", blackWhite);
 
   cv::Mat connectedHRegions;
   morphKernel = cv::getStructuringElement( cv::MORPH_RECT, cv::Size( 11, 7 ) );
@@ -61,7 +63,7 @@ std::vector<cv::Rect> ImageProcessor::detectTextBounds(const cv::Mat &cvImage) {
   cv::findContours( connectedHRegions, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
   std::vector< cv::Rect > boundingRect;
-  double r;
+
   for(int i = 0; i >= 0; i = hierarchy[i][0]) {
     cv::Rect rect = cv::boundingRect( contours[i] );
     if( ( isHorizontal(rect) && isHorizontalAccepted(rect, connectedHRegions) ) ||
@@ -73,6 +75,54 @@ std::vector<cv::Rect> ImageProcessor::detectTextBounds(const cv::Mat &cvImage) {
   }
 
   return boundingRect;
+}
+
+cv::Rect ImageProcessor::detectDocumentBounds(const cv::Mat &cvImage, const double &bwThresholdLevel)
+{
+  const double thresholdBinaryValue = 255.;
+
+  cv::Mat grayscaleImage;
+  cvtColor( cvImage, grayscaleImage, CV_BGR2GRAY );
+  //blur( grayscaleImage, grayscaleImage, cv::Size(7, 7) );
+
+  cv::Mat gradient;
+  cv::Mat morphKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 7, 7 ) );
+  cv::morphologyEx( grayscaleImage, gradient, cv::MORPH_GRADIENT, morphKernel );
+  blur( gradient, gradient, cv::Size(7, 7) );
+  cv::imwrite("gradient_doc.jpg", gradient);
+
+  cv::Mat blackWhite;
+  cv::threshold( gradient, blackWhite, bwThresholdLevel, thresholdBinaryValue, cv::THRESH_BINARY);
+  cv::imwrite("blackwhite_doc.jpg", blackWhite);
+
+  std::vector< std::vector< cv::Point > > contours;
+  std::vector< cv::Vec4i > hierarchy;
+  cv::findContours( blackWhite, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+
+  cv::Rect boundingRect;
+
+  double largestArea = 0.;
+  size_t largestContourIndex = 0, prevLargestContourIndex = 0;
+
+
+  for( size_t i = 0U; i < contours.size(); ++i ) {
+    double a = cv::contourArea( contours[i], false );
+    if(a > largestArea) {
+      largestArea = a;
+      prevLargestContourIndex = largestContourIndex;
+      largestContourIndex = i;
+    }
+  }
+
+  //return cv::boundingRect( contours[prevLargestContourIndex] );
+  return cv::boundingRect( contours[largestContourIndex] );
+}
+
+cv::Mat ImageProcessor::createDocumentBoundedImage(const cv::Mat &image, const cv::Rect &documentBounds)
+{
+  cv::Mat result = image.clone();
+  cv::rectangle( result, documentBounds, cv::Scalar( 0, 0, 255 ), 3, 8, 0 );
+  return result;
 }
 
 bool ImageProcessor::isHorizontal(const cv::Rect &rect)
@@ -101,8 +151,8 @@ bool ImageProcessor::isVerticalAccepted(const cv::Rect &rect, const cv::Mat &ima
 
 cv::Mat ImageProcessor::createTextBoundedImage(const cv::Mat &image, const std::vector<cv::Rect>& textBounds) {
   cv::Mat result = image.clone();
-  if( textBounds.size() > 0 ) {
-    for( auto i = 0; i < textBounds.size(); ++i ) {
+  if( textBounds.size() > 0U ) {
+    for( auto i = 0U; i < textBounds.size(); ++i ) {
       cv::rectangle( result, textBounds[i], cv::Scalar( 0, 255 ,0 ), 3, 8, 0 );
     }
   }

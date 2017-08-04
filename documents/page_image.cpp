@@ -3,9 +3,12 @@
 
 PageImage::PageImage(const cv::Mat &image):
   image_( image ),
+  documentBounds_( ImageProcessor::detectDocumentBounds(image_) ),
   textBounds_( ImageProcessor::detectTextBounds(image_) ),
   boundedTextImage_( ImageProcessor::createTextBoundedImage( image_, textBounds_) )
-{}
+{
+  boundedTextImage_ = ImageProcessor::createDocumentBoundedImage(boundedTextImage_, documentBounds_);
+}
 
 const cv::Mat &PageImage::image() const
 {
@@ -20,6 +23,8 @@ const cv::Mat &PageImage::borderedTextImage() const
 void PageImage::setImage(const cv::Mat &image)
 {
   image_ = image;
+  documentBounds_ = ImageProcessor::detectDocumentBounds(image_);
   textBounds_ = ImageProcessor::detectTextBounds(image_);
   boundedTextImage_ = ImageProcessor::createTextBoundedImage(image_, textBounds_);
+  boundedTextImage_ = ImageProcessor::createDocumentBoundedImage(boundedTextImage_, documentBounds_);
 }
