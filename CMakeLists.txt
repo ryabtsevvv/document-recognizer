@@ -1,8 +1,11 @@
 # Основной файл системы сборки приложения для распознавания документов.
 
-PROJECT( DOCUMENT_RECOGNIZER CXX )
+PROJECT( DocumentRecognizer CXX )
 
 CMAKE_MINIMUM_REQUIRED( VERSION 3.0.2 FATAL_ERROR )
+
+# Подключение дополнительных модулей CMake.
+INCLUDE( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxxflags.cmake )
 
 # Подключение модулей библиотеки Qt5.
 FIND_PACKAGE( Qt5 COMPONENTS
