@@ -11,6 +11,16 @@
 #include <vector>
 #include <opencv2/core/types.hpp>
 
+#if !defined( IF_DEBUG )
+
+#if !defined( NDEBUG )
+  #define IF_DEBUG( code ) \
+    (code) ;
+#else
+  #define IF_DEBUG( code )
+#endif // !defined( NDEBUG )
+
+#endif // !defined( IF_DEBUG )
 
 namespace ImageProcessorConstants {
   const double minimialVerticalTextSizeToPageSize = 1. / 180.;    //!< Соотношение верно для паспорта РФ.

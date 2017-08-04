@@ -46,16 +46,16 @@ std::vector<cv::Rect> ImageProcessor::detectTextBounds(const cv::Mat &cvImage, c
   cv::Mat morphKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( colsSize, rowsSize ) );
   cv::morphologyEx( grayscaleImage, gradient, cv::MORPH_GRADIENT, morphKernel );
   //blur( gradient, gradient, cv::Size(3, 3) );
-  cv::imwrite("gradient.jpg", gradient);
+  IF_DEBUG( cv::imwrite("gradient.jpg", gradient) );
 
   cv::Mat blackWhite;
   cv::threshold( gradient, blackWhite, bwThresholdLevel, thresholdBinaryValue, cv::THRESH_BINARY);
-  cv::imwrite("blackwhite.jpg", blackWhite);
+  IF_DEBUG( cv::imwrite("blackwhite.jpg", blackWhite) );
 
   cv::Mat connectedHRegions;
   morphKernel = cv::getStructuringElement( cv::MORPH_RECT, cv::Size( 11, 7 ) );
   cv::morphologyEx( blackWhite, connectedHRegions, cv::MORPH_CLOSE, morphKernel );
-  cv::imwrite("connected.jpg", connectedHRegions);
+  IF_DEBUG( cv::imwrite("connected.jpg", connectedHRegions) );
 
 
   std::vector< std::vector< cv::Point > > contours;
@@ -89,11 +89,11 @@ cv::Rect ImageProcessor::detectDocumentBounds(const cv::Mat &cvImage, const doub
   cv::Mat morphKernel = cv::getStructuringElement( cv::MORPH_ELLIPSE, cv::Size( 7, 7 ) );
   cv::morphologyEx( grayscaleImage, gradient, cv::MORPH_GRADIENT, morphKernel );
   blur( gradient, gradient, cv::Size(7, 7) );
-  cv::imwrite("gradient_doc.jpg", gradient);
+  IF_DEBUG( cv::imwrite("gradient_doc.jpg", gradient) );
 
   cv::Mat blackWhite;
   cv::threshold( gradient, blackWhite, bwThresholdLevel, thresholdBinaryValue, cv::THRESH_BINARY);
-  cv::imwrite("blackwhite_doc.jpg", blackWhite);
+  IF_DEBUG( cv::imwrite("blackwhite_doc.jpg", blackWhite) );
 
   std::vector< std::vector< cv::Point > > contours;
   std::vector< cv::Vec4i > hierarchy;
@@ -102,19 +102,17 @@ cv::Rect ImageProcessor::detectDocumentBounds(const cv::Mat &cvImage, const doub
   cv::Rect boundingRect;
 
   double largestArea = 0.;
-  size_t largestContourIndex = 0, prevLargestContourIndex = 0;
+  size_t largestContourIndex = 0;
 
 
   for( size_t i = 0U; i < contours.size(); ++i ) {
     double a = cv::contourArea( contours[i], false );
     if(a > largestArea) {
       largestArea = a;
-      prevLargestContourIndex = largestContourIndex;
       largestContourIndex = i;
     }
   }
 
-  //return cv::boundingRect( contours[prevLargestContourIndex] );
   return cv::boundingRect( contours[largestContourIndex] );
 }
 
