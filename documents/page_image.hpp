@@ -43,7 +43,7 @@ public:
   const std::vector< cv::Rect >& textBounds() const;
 
   //! Возвращает кольчество обнаруженных текстовых блоков.
-  const size_t textBlocksNumber() const;
+  size_t textBlocksNumber() const;
 
 private:
 
@@ -54,7 +54,7 @@ private:
 }; // class PageImage
 
 inline
-const size_t PageImage::textBlocksNumber() const
+size_t PageImage::textBlocksNumber() const
 {
   return textBounds_.size();
 }
